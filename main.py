@@ -6,7 +6,7 @@ import time
 import pandas as pd
 
 
-# выбор всех уникальных строк из файла по указанному столбцу
+# выбор всех уникальных строк с листа по указанному столбцу
 def unique_label(sheet, column_char):
     count: int = 2
     j = column_char + str(count)
@@ -25,7 +25,7 @@ def unique_label(sheet, column_char):
     return list_of_unique_names, count
 
 
-# вывод инфы в консоль и добавление её в массив (счётчик, среднее, 2 перцентиля)
+# вывод инфы в консоль и добавление её в массив
 def print_info(count, sum, arr_of_values, errors):
     text = []
     text.append('Count: ' + str(count))
@@ -40,7 +40,7 @@ def print_info(count, sum, arr_of_values, errors):
     print(text[4])
     text.append('Min: ' + str(min(arr_of_values)))
     print(text[5])
-    text.append('Errors: ' + str(errors/count*100) + '%')
+    text.append('Errors: ' + str(errors / count * 100) + '%')
     print(text[6])
     return text
 
@@ -51,16 +51,20 @@ def del_slashes(checked_string):
         checked_string = checked_string.replace('/', '-')
     return checked_string
 
-#
+
+# удаление знака вопроса
 def del_question(checked_string):
     while checked_string.find('?') != -1:
         checked_string = checked_string.replace('?', '')
     return checked_string
 
+
+# удаление двоеточия
 def del_colon(checked_string):
     while checked_string.find(':') != -1:
         checked_string = checked_string.replace(':', '')
     return checked_string
+
 
 # временный файл для сортировки
 temp_file = 'file.xlsx'
@@ -112,7 +116,7 @@ except KeyError:
     print('Ошибка данных в столбце временных меток')
     exit()
 
-#
+# формирование файла Excel для результатов
 result_file = op.Workbook()
 result_file.create_sheet(title='result', index=0)
 result_sheet = result_file['result']
@@ -130,7 +134,7 @@ result_sheet['J1'] = 'Ошибки'
 # окончание работы с исходным файлом
 source_file.close()
 
-#
+# подгрузка файла шаблона с именами и описаниями транзакций
 names_file = op.load_workbook('Names.xlsx')
 names_sheet = names_file.active
 
@@ -141,8 +145,6 @@ sheet = my_file[name_of_sheet]
 # получаем счётчик и массив с уникальными лейблами
 main_array, counter_of_lines = unique_label(sheet, col_label)
 
-print(counter_of_lines)
-
 # задание и проверка частоты
 frequency = int(input('Введите частоту дат на графиках (в пределах от 1 до 20): '))
 
@@ -150,7 +152,7 @@ while frequency > 20 or frequency < 1:
     print('Неверное значение частоты, попробуйте снова.')
     frequency = int(input('Введите частоту дат на графиках (в пределах от 1 до 20): '))
 
-#
+# объявление даты (подписи) к названию выходных файлов
 date = input('Введите дату теста (для названия): ')
 
 counter_for_writing = 2
@@ -199,13 +201,13 @@ for name in all_names:
     # в массив выводим итоговую информацию по транзакции + вывод в консоль
     main_array = print_info(pass_counter, summa, arr_of_elapse, sum_of_errors)
 
-    #
+    # проход по файлу-шаблону, заполнение столбцов с ролью и описанием транзакции
     for k in range(1, 266):
         if name == names_sheet['A' + str(k)].value:
             result_sheet['A' + str(counter_for_writing)] = names_sheet['B' + str(k)].value
             result_sheet['B' + str(counter_for_writing)] = names_sheet['C' + str(k)].value
 
-    #
+    # заполнение информации об транзакции в файле
     result_sheet['C' + str(counter_for_writing)] = name
     result_sheet['D' + str(counter_for_writing)] = main_array[0][7:]
     result_sheet['E' + str(counter_for_writing)] = main_array[1][9:]
@@ -251,5 +253,5 @@ for name in all_names:
 my_file.close()
 os.remove(temp_file)
 
-#
+# сохранение результатов в Excel файле
 result_file.save('result_file_' + str(name_of_sheet) + '_' + str(date) + '.xlsx')
