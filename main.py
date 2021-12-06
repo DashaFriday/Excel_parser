@@ -99,17 +99,6 @@ col_errors = input('Введите букву столбца с ошибками
 start_label = col_label + str(2)
 name_of_col_sort = sheet[col_t_s + str(1)].value
 
-print(name_of_col_sort)
-
-# задание и проверка частоты
-frequency = int(input('Введите частоту дат на графиках (в пределах от 1 до 20): '))
-
-while frequency > 20 or frequency < 1:
-    print('Неверное значение частоты, попробуйте снова.')
-    frequency = int(input('Введите частоту дат на графиках (в пределах от 1 до 20): '))
-
-date = input('Введите дату теста (для названия): ')
-
 # сортировка файла по таймстемпам
 source_file = pd.ExcelFile(name_of_file)
 sheet = source_file.parse(name_of_sheet)
@@ -151,6 +140,18 @@ sheet = my_file[name_of_sheet]
 
 # получаем счётчик и массив с уникальными лейблами
 main_array, counter_of_lines = unique_label(sheet, col_label)
+
+print(counter_of_lines)
+
+# задание и проверка частоты
+frequency = int(input('Введите частоту дат на графиках (в пределах от 1 до 20): '))
+
+while frequency > 20 or frequency < 1:
+    print('Неверное значение частоты, попробуйте снова.')
+    frequency = int(input('Введите частоту дат на графиках (в пределах от 1 до 20): '))
+
+#
+date = input('Введите дату теста (для названия): ')
 
 counter_for_writing = 2
 
@@ -199,7 +200,7 @@ for name in all_names:
     main_array = print_info(pass_counter, summa, arr_of_elapse, sum_of_errors)
 
     #
-    for k in range(1, 77):
+    for k in range(1, 266):
         if name == names_sheet['A' + str(k)].value:
             result_sheet['A' + str(counter_for_writing)] = names_sheet['B' + str(k)].value
             result_sheet['B' + str(counter_for_writing)] = names_sheet['C' + str(k)].value
@@ -241,7 +242,7 @@ for name in all_names:
     # plt.show()
 
     # сохранение графика в папку проекта и закрытие графика
-    way = del_slashes(del_question(name[0:30])) + '_' + str(name_of_sheet) + '_' + str(date) + '.png'
+    way = del_slashes(del_question(del_colon(name[0:30]))) + '_' + str(name_of_sheet) + '_' + str(date) + '.png'
     print(way)
     plt.savefig(way, bbox_inches='tight')
     plt.close()
