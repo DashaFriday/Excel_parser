@@ -30,19 +30,19 @@ def unique_label(sheet, column_char):
 # вывод инфы в консоль и добавление её в массив
 def print_info(count, sum, arr_of_values, errors):
     text = []
-    text.append('Count: ' + str(count))
+    text.append('Счётчик: ' + str(count))
     print(text[0])
-    text.append('Average: ' + str(round(sum / count, 2)))
+    text.append('Среднее: ' + str(round(sum / count, 2)))
     print(text[1])
-    text.append('Percentile 95: ' + str(round(np.percentile(arr_of_values, 95), 2)))
+    text.append('Перцентиль 95: ' + str(round(np.percentile(arr_of_values, 95), 2)))
     print(text[2])
-    text.append('Percentile 99: ' + str(round(np.percentile(arr_of_values, 99), 2)))
+    text.append('Перцентиль 99: ' + str(round(np.percentile(arr_of_values, 99), 2)))
     print(text[3])
-    text.append('Max: ' + str(max(arr_of_values)))
+    text.append('Максимум: ' + str(max(arr_of_values)))
     print(text[4])
-    text.append('Min: ' + str(min(arr_of_values)))
+    text.append('Минимум: ' + str(min(arr_of_values)))
     print(text[5])
-    text.append('Errors: ' + str(errors / count * 100) + '%')
+    text.append('Ошибки: ' + str(errors / count * 100) + '%')
     print(text[6])
     return text
 
@@ -85,6 +85,8 @@ except FileNotFoundError:
     exit()
 else:
     print('OK')
+
+print('Листы: ' + str(source_file.sheetnames))
 
 # блок ввода имени листа + проверка
 name_of_sheet = input('Введите название листа: ')
@@ -136,7 +138,7 @@ result_sheet['J1'] = 'Ошибки'
 source_file.close()
 
 # подгрузка файла шаблона с именами и описаниями транзакций
-names_file = op.load_workbook('Names.xlsx')
+names_file = op.load_workbook(r'Names.xlsx')
 names_sheet = names_file.active
 
 # начало работы с копией данных
@@ -146,7 +148,7 @@ sheet = my_file[name_of_sheet]
 # получаем счётчик и массив с уникальными лейблами
 main_array, counter_of_lines = unique_label(sheet, col_label)
 
-print(counter_of_lines)
+print('Количество строк: ' + str(counter_of_lines))
 
 # задание и проверка частоты
 frequency = int(input('Введите частоту дат на графиках (в пределах от 1 до 20): '))
@@ -158,10 +160,14 @@ while frequency > 20 or frequency < 1:
 # объявление даты (подписи) к названию выходных файлов
 name_of_test = input('Введите название теста: ')
 
-#
+# объявление номера ступени, идёт в текстовый файл
+level = input('Введите номер ступени: ')
+
+# создание Word-файла, заполнение информации о тесте
 result_text_file = Document()
 result_text_file.add_paragraph('Тест: "' + name_of_test + '"')
-result_text_file.add_paragraph('Ступень: ' + 'XXX\n\n')
+result_text_file.add_paragraph(level)  # 'Ступень: ' +
+result_text_file.add_paragraph()
 
 counter_for_writing = 2
 
@@ -208,21 +214,49 @@ for name in all_names:
     # в массив выводим итоговую информацию по транзакции + вывод в консоль
     main_array = print_info(pass_counter, summa, arr_of_elapse, sum_of_errors)
 
+    # временные строки для заполнения пропусков и добавления подписей в файл
+    temp_var = ''
+    temp_var2 = ''
+
     # проход по файлу-шаблону, заполнение столбцов с ролью и описанием транзакции
     for k in range(1, 266):
         if name == names_sheet['A' + str(k)].value:
-            result_sheet['A' + str(counter_for_writing)] = names_sheet['B' + str(k)].value      # роль
-            result_sheet['B' + str(counter_for_writing)] = names_sheet['C' + str(k)].value      # описание
+            result_sheet['A' + str(counter_for_writing)] = names_sheet['B' + str(k)].value  # роль
+            temp_var = str(names_sheet['B' + str(k)].value)
+            result_sheet['B' + str(counter_for_writing)] = names_sheet['C' + str(k)].value  # описание
+            temp_var2 = str(names_sheet['C' + str(k)].value)
+
+    # заполнение отсутствующих в шаблоне строк
+    if temp_var == '':
+        if name.find('user1') != -1:
+            temp_var = 'Создатель'
+        elif name.find('user2') != -1:
+            temp_var = 'Производитель работ (Исполнитель)'
+        elif name.find('user3') != -1:
+            temp_var = 'Допускающий (Мастер участка)'
+        elif name.find('user4') != -1:
+            temp_var = 'Согласующий'
+        elif name.find('user5') != -1:
+            temp_var = 'Выдающий'
+        elif name.find('user6') != -1:
+            temp_var = 'Согласующий'
+        elif name.find('user8') != -1:
+            temp_var = 'Ответственный за подготовительные работы'
+        else:
+            temp_var = 'Роль не задана'
+
+    if temp_var2 == '':
+        temp_var2 = 'Описание не задано'
 
     # заполнение информации об транзакции в файле
     result_sheet['C' + str(counter_for_writing)] = name
-    result_sheet['D' + str(counter_for_writing)] = main_array[0][7:]        # счётчик
-    result_sheet['E' + str(counter_for_writing)] = main_array[1][9:]        # среднее
-    result_sheet['F' + str(counter_for_writing)] = main_array[4][5:]        # максимум
-    result_sheet['G' + str(counter_for_writing)] = main_array[5][5:]        # минимум
-    result_sheet['H' + str(counter_for_writing)] = main_array[2][14:]       # 95 перцентиль
-    result_sheet['I' + str(counter_for_writing)] = main_array[3][14:]       # 99 перцентиль
-    result_sheet['J' + str(counter_for_writing)] = main_array[6][8:]        # ошибки
+    result_sheet['D' + str(counter_for_writing)] = main_array[0][9:]  # счётчик
+    result_sheet['E' + str(counter_for_writing)] = main_array[1][9:]  # среднее
+    result_sheet['F' + str(counter_for_writing)] = main_array[4][10:]  # максимум
+    result_sheet['G' + str(counter_for_writing)] = main_array[5][9:]  # минимум
+    result_sheet['H' + str(counter_for_writing)] = main_array[2][15:]  # 95 перцентиль
+    result_sheet['I' + str(counter_for_writing)] = main_array[3][15:]  # 99 перцентиль
+    result_sheet['J' + str(counter_for_writing)] = main_array[6][8:]  # ошибки
 
     counter_for_writing += 1
 
@@ -256,9 +290,16 @@ for name in all_names:
     plt.savefig(way, bbox_inches='tight')
     plt.close()
 
-    result_text_file.add_paragraph(result_sheet['B' + str(counter_for_writing)].value + ' (' + name + ')')
-    result_text_file.add_paragraph('Роль - ' + result_sheet['A' + str(counter_for_writing)])
-    result_text_file.add_picture(way)
+    result_text_file.add_paragraph(str(temp_var2) + ' (' + name + ')')
+    result_text_file.add_paragraph('Роль - ' + str(temp_var))
+    # result_text_file.add_paragraph(main_array[0])
+    # result_text_file.add_paragraph(main_array[1])
+    # result_text_file.add_paragraph(main_array[2])
+    # result_text_file.add_paragraph(main_array[3])
+    # result_text_file.add_paragraph(main_array[4])
+    # result_text_file.add_paragraph(main_array[5])
+    # result_text_file.add_paragraph(main_array[6])
+    result_text_file.add_picture(way, width=shared.Cm(17))
     result_text_file.add_paragraph()
 
 # закрываем и удаляем временный файл
@@ -266,5 +307,7 @@ my_file.close()
 os.remove(temp_file)
 
 # сохранение результатов в Excel и Word файлах
-result_file.save('result_file_' + str(name_of_sheet) + '_' + str(name_of_test) + '.xlsx')
-result_text_file.save('result_file_' + str(name_of_sheet) + '_' + str(name_of_test) + '.docx')
+result_file.save(r'result_file_' + str(name_of_sheet) + '_' + str(name_of_test) + '.xlsx')
+result_text_file.save(r'result_file_' + str(name_of_sheet) + '_' + str(name_of_test) + '.docx')
+
+print('STOP')
